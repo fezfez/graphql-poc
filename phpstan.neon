@@ -1,0 +1,43 @@
+#includes:
+#	- vendor/phpstan/phpstan/conf/bleedingEdge.neon TODO: Try to add this
+parameters:
+    tmpDir: .phpstan-cache
+    paths:
+        - src
+    excludePaths:
+         # TODO: exlude only for PHP < 8.1
+        - src/Mappers/Root/EnumTypeMapper.php
+        - src/Types/EnumType.php
+    level: 8
+    checkGenericClassInNonGenericObjectType: false
+    reportUnmatchedIgnoredErrors: false
+    treatPhpDocTypesAsCertain: false
+    ignoreErrors:
+        - "#PHPDoc tag \\@throws with type Psr\\\\Container\\\\ContainerExceptionInterface is not subtype of Throwable#"
+        - "#Parameter .* of class ReflectionMethod constructor expects string(\\|null)?, object\\|string given.#"
+        - "#PHPDoc tag @throws with type Psr\\\\SimpleCache\\\\InvalidArgumentException is not subtype of Throwable#"
+        - '#Variable \$context might not be defined.#'
+        -
+           message: '#Parameter .* of class GraphQL\\Error\\Error constructor expects#'
+           path: src/Exceptions/WebonyxErrorHandler.php
+        -
+           message: '#Thrown exceptions in a catch block must bundle the previous exception#'
+           path: src/Mappers/Root/IteratorTypeMapper.php
+        -
+           message: '#Parameter \#2 \$subType of method .* expects#'
+           path: src/Mappers/Root/IteratorTypeMapper.php
+        -
+           message: '#Method TheCodingMachine\\GraphQLite\\Mappers\\StaticTypeMapper::castOutputTypeToMutable\(\) should return TheCodingMachine\\GraphQLite\\Mappers\\Proxys\\MutableInterfaceTypeAdapter\|TheCodingMachine\\GraphQLite\\Mappers\\Proxys\\MutableObjectTypeAdapter but returns GraphQL\\Type\\Definition\\InterfaceType|GraphQL\\Type\\Definition\\ObjectType.#'
+           path: src/Mappers/StaticTypeMapper.php
+        -
+           message: '#Unreachable statement - code above always terminates.#'
+           path: src/Http/WebonyxGraphqlMiddleware.php
+        -
+           message: '#Property TheCodingMachine\\GraphQLite\\Annotations\\Type::\$class \(class-string<object>\\|null\) does not accept string.#'
+           path: src/Annotations/Type.php
+        -
+           message: '#Method TheCodingMachine\\GraphQLite\\AnnotationReader::(getMethodAnnotations|getPropertyAnnotations)\(\) should return array<int, T of object> but returns array<object>.#'
+           path: src/AnnotationReader.php
+        -
+           message: '#Call to an undefined method object::__toString\(\)#'
+           path : src/Types/ID.php
