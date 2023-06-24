@@ -1,0 +1,71 @@
+{
+    "type": [
+        {
+            "class": "FezFez\\GraphQLPoc\\Fixtures\\GenericCollection",
+            "method": [
+                {
+                    "name": "getItems",
+                    "return": {
+                        "isList": true,
+                        "of": "T"
+                    }
+                }
+            ]
+        },
+        {
+            "class": "FezFez\\GraphQLPoc\\Fixtures\\MyDto",
+            "method": [
+                {
+                    "name": "getToto",
+                    "return": {
+                        "isList": false,
+                        "of": "string"
+                    }
+                }
+            ]
+        }
+    ],
+    "query": [
+        {
+            "class": "FezFez\\GraphQLPoc\\Fixtures\\SampleQuery",
+            "name": "returnBool",
+            "return": {
+                "isList": false,
+                "of": "bool"
+            }
+        },
+        {
+            "class": "FezFez\\GraphQLPoc\\Fixtures\\SampleQuery",
+            "name": "arrayOfInt",
+            "return": {
+                "isList": true,
+                "of": "int"
+            }
+        },
+        {
+            "class": "FezFez\\GraphQLPoc\\Fixtures\\SampleQuery",
+            "name": "listOfInt",
+            "return": {
+                "isList": true,
+                "of": "int"
+            }
+        },
+        {
+            "class": "FezFez\\GraphQLPoc\\Fixtures\\SampleQuery",
+            "name": "listOfMyDto",
+            "return": {
+                "isList": true,
+                "of": "FezFez\\GraphQLPoc\\Fixtures\\MyDto"
+            }
+        },
+        {
+            "class": "FezFez\\GraphQLPoc\\Fixtures\\SampleQuery",
+            "name": "GenericCollectionOfMyDto",
+            "return": {
+                "isGenerrique": true,
+                "of": "FezFez\\GraphQLPoc\\Fixtures\\GenericCollection",
+                "child": "FezFez\\GraphQLPoc\\Fixtures\\MyDto"
+            }
+        }
+    ]
+}
