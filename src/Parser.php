@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace FezFez\GraphQLPoc;
 
-use FezFez\GraphQLPoc\Attribute\GeneriqueMethod;
-use olvlvl\ComposerAttributeCollector\Attributes;
-use ReflectionMethod;
 use FezFez\GraphQLPoc\Attribute\Field;
+use FezFez\GraphQLPoc\Attribute\GeneriqueMethod;
 use FezFez\GraphQLPoc\Attribute\Query;
 use FezFez\GraphQLPoc\Attribute\Right;
 use FezFez\GraphQLPoc\Attribute\Type;
+use olvlvl\ComposerAttributeCollector\Attributes;
+use ReflectionMethod;
 
 use function array_key_exists;
 use function assert;

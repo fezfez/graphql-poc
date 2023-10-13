@@ -8,8 +8,10 @@ use FezFez\GraphQLPoc\Exception\NotAuthorized;
 use FezFez\GraphQLPoc\Security\GetUserFromContext;
 use FezFez\GraphQLPoc\Security\IsAllowed;
 use Psr\Container\ContainerInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 use function assert;
+use function sprintf;
 
 class QueryTypeResolver
 {
@@ -20,7 +22,7 @@ class QueryTypeResolver
     ) {
     }
 
-    public function __invoke($rootValue, array $args, $context): mixed
+    public function __invoke($rootValue, array $args, ServerRequestInterface $context): mixed
     {
         $method = $this->query['name'];
 
@@ -34,7 +36,7 @@ class QueryTypeResolver
             $user = $getUserFromContext->get($context);
 
             if (! $isAllowed->get($user)) {
-                throw new NotAuthorized('not authorized');
+                throw new NotAuthorized(sprintf('not authorized to run %s', $this->query['name']));
             }
         }
 

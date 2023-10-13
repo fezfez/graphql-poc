@@ -32,24 +32,19 @@ class Type implements TypeInterface
     /** @var class-string<object>|null */
     private $class;
 
-    /** @var string|null */
-    private $name;
+    private string|null $name = null;
 
-    /** @var bool */
-    private $default;
+    private bool $default;
 
     /**
      * Is the class having the annotation a GraphQL type itself?
-     *
-     * @var bool
      */
-    private $selfType = false;
+    private bool $selfType = false;
 
-    /** @var bool */
-    private $useEnumValues = false;
+    private bool $useEnumValues = false;
 
     /**
-     * @param mixed[] $attributes
+     * @param mixed[]                   $attributes
      * @param class-string<object>|null $class
      */
     public function __construct(
@@ -61,7 +56,7 @@ class Type implements TypeInterface
         bool|null $useEnumValues = null,
     ) {
         $external = $external ?? $attributes['external'] ?? null;
-        $class = $class ?? $attributes['class'] ?? null;
+        $class    = $class ?? $attributes['class'] ?? null;
         if ($class !== null) {
             $this->setClass($class);
         } else {
@@ -71,7 +66,7 @@ class Type implements TypeInterface
         $this->name = $name ?? $attributes['name'] ?? null;
 
         // If no value is passed for default, "default" = true
-        $this->default = $default ?? $attributes['default'] ?? true;
+        $this->default       = $default ?? $attributes['default'] ?? true;
         $this->useEnumValues = $useEnumValues ?? $attributes['useEnumValues'] ?? false;
 
         if ($external === null) {
@@ -97,11 +92,12 @@ class Type implements TypeInterface
 
     public function setClass(string $class): void
     {
-        $class = ltrim($class, '\\');
+        $class       = ltrim($class, '\\');
         $isInterface = interface_exists($class);
         if (! class_exists($class) && ! $isInterface) {
             throw ClassNotFoundException::couldNotFindClass($class);
         }
+
         $this->class = $class;
 
         if (! $isInterface) {
