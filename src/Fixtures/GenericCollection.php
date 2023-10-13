@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace FezFez\GraphQLPoc\Fixtures;
 
-use TheCodingMachine\GraphQLite\Annotations\Field;
-use TheCodingMachine\GraphQLite\Annotations\Type;
+use FezFez\GraphQLPoc\Attribute\GeneriqueMethod;
 
 /** @template T */
-#[Type]
 class GenericCollection
 {
     /** @var array<T> */
@@ -21,7 +19,7 @@ class GenericCollection
     }
 
     /** @return array<T> */
-    #[Field]
+    #[GeneriqueMethod]
     public function getItems(): array
     {
         return $this->items;

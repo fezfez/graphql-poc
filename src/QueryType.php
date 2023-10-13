@@ -20,11 +20,7 @@ class QueryType extends ObjectType
             $definition['fields'][$query['name']] = [
                 'type' => TypeLoader::byTypeNameaaa($query['return']),
                 'description' => 'Returns ' . $query['return']['of'],
-                'resolve' => static function ($rootValue, array $args) use ($container, $query): mixed {
-                    $method = $query['name'];
-
-                    return $container->get($query['class'])->$method($args);
-                },
+                'resolve' => new QueryTypeResolver($container, $query, $parser),
             ];
         }
 

@@ -14,6 +14,7 @@ use GraphQL\Type\Definition\Type;
 
 use function array_key_exists;
 use function lcfirst;
+use function sprintf;
 use function strtolower;
 
 class TypeLoader
@@ -33,18 +34,14 @@ class TypeLoader
      */
     public static function byTypeNameaaa(array $description): Type
     {
-        $shortName = $description['of'];
+        $shortName = array_key_exists('mustCreateType', $description) ? $description['mustCreateType'] : $description['of'];
         $cacheName = strtolower($shortName);
 
         if (! array_key_exists($cacheName, self::$types)) {
-            try {
-                self::$types[$cacheName] = self::resolveType($description['of']);
-            } catch (Exception) {
-                dump($description);exit;
-            }
+            self::$types[$cacheName] = self::resolveType($shortName);
         }
 
-        if ($description['isList'] === true) {
+        if (array_key_exists('isList', $description) && $description['isList'] === true) {
             return Type::listOf(self::$types[$cacheName]);
         }
 
@@ -73,19 +70,25 @@ class TypeLoader
                 return self::int();
         }
 
+        $generique = ParserCache::getInstance()->getGenerique();
+
         foreach (ParserCache::getInstance()->getTypes() as $type) {
             if ($type['class'] === $shortName) {
                 $filds = [];
 
-                foreach ($type['method'] as $method) {
-                    $filds[$method['name']] = self::byTypeNameaaa($method['return']);
+                foreach ($type['method'] as $exposedName => $method) {
+                    $filds[$exposedName] = self::byTypeNameaaa($method['return']);
                 }
 
                 return new ObjectType([
                     'name' => $type['class'],
                     'fields' => $filds,
-                    'resolveField' => static function (mixed $obj, array $args, $context, ResolveInfo $info) {
-                        $fieldName = $info->fieldName;
+                    'resolveField' => static function (mixed $obj, array $args, $context, ResolveInfo $info) use ($type) {
+                        if ($info->fieldName === 'items') {
+                            return $obj->getItems($args);
+                        }
+
+                        $fieldName = $type['method'][$info->fieldName]['name'];
 
                         return $obj->$fieldName($args);
                     },
@@ -93,7 +96,7 @@ class TypeLoader
             }
         }
 
-        throw new Exception("Unknown graphql type: {$shortName}");
+        throw new Exception(sprintf('Unknown graphql type: %s', $shortName));
     }
 
     /** @throws InvariantViolation */

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FezFez\GraphQLPoc\Fixtures;
 
 use TheCodingMachine\GraphQLite\Annotations\Query;
+use TheCodingMachine\GraphQLite\Annotations\Right;
 
 class SampleQuery
 {
@@ -28,15 +29,16 @@ class SampleQuery
         return [1, 2, 3];
     }
 
-    /** @return list<\FezFez\GraphQLPoc\Fixtures\MyDto> */
+    /** @return list<MyDto> */
     #[Query(name: 'listOfMyDto')]
     public function listOfMyDto(): array
     {
         return [new MyDto(), new MyDto()];
     }
 
-    /** @return \FezFez\GraphQLPoc\Fixtures\GenericCollection<\FezFez\GraphQLPoc\Fixtures\MyDto> */
+    /** @return GenericCollection<MyDto> */
     #[Query(name: 'GenericCollectionOfMyDto')]
+    #[Right(name :'users')]
     public function GenericCollectionOfMyDto(): GenericCollection
     {
         return new GenericCollection(new MyDto(), new MyDto());

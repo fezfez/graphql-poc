@@ -5,6 +5,12 @@ declare(strict_types=1);
 namespace FezFez\GraphQLPoc;
 
 use Exception;
+use PhpParser\Node;
+use PhpParser\Node\Name;
+use PhpParser\NodeFinder;
+use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\NameResolver;
+use PhpParser\ParserFactory;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ReturnTagValueNode;
 use PHPStan\PhpDocParser\Ast\Type\GenericTypeNode;
 use PHPStan\PhpDocParser\Lexer\Lexer;
@@ -12,10 +18,15 @@ use PHPStan\PhpDocParser\Parser\ConstExprParser;
 use PHPStan\PhpDocParser\Parser\PhpDocParser;
 use PHPStan\PhpDocParser\Parser\TokenIterator;
 use PHPStan\PhpDocParser\Parser\TypeParser;
+use ReflectionClass;
 use ReflectionMethod;
+use RuntimeException;
 use Throwable;
 
+use function class_exists;
 use function count;
+use function file_get_contents;
+use function sprintf;
 use function substr;
 
 class DocParser
@@ -32,7 +43,7 @@ class DocParser
     }
 
     /** @return array{isList: bool, of: string} */
-    public function getReturnTypeFromDocBlock(ReflectionMethod $method): array
+    public function getReturnTypeFromDocBlock(ReflectionMethod $method, string $class): array
     {
         $return  = $method->getReturnType();
         $comment = $method->getDocComment();
@@ -44,20 +55,25 @@ class DocParser
         if ($return->getName() === 'array') {
             $firstParamTag = $this->getReturnTags($comment);
 
-            return ['isList' => true, 'of' => $this->parseGeneric($firstParamTag)];
+            return ['isList' => true, 'of' => $this->parseGeneric($firstParamTag, $class), 'ici' => 'a'];
         }
 
         try {
             $firstParamTag = $this->getReturnTags($comment);
             if (class_exists($return->getName())) {
-                return ['isGenerrique' => true, 'of' => $return->getName(), 'child' => $this->parseGeneric($firstParamTag)];
+                return [
+                    'isGenerrique' => true,
+                    'of' => $return->getName(),
+                    'child' => $this->parseGeneric($firstParamTag, $class),
+                    'mustCreateType' => $return->getName() . '_TO_' . $this->parseGeneric($firstParamTag, $class),
+                ];
             }
 
-            return ['isList' => true, 'of' => $this->parseGeneric($firstParamTag)];
+            return ['isList' => true, 'of' => $this->parseGeneric($firstParamTag, $class)];
         } catch (Throwable) {
         }
 
-        return ['isList' => false, 'of' => $return->getName()];
+        return ['isList' => false, 'of' => $return->getName(), 'ici' => 'c'];
     }
 
     private function getReturnTags(string|false $comment): ReturnTagValueNode
@@ -77,14 +93,13 @@ class DocParser
         return $returnTags[0];
     }
 
-    private function parseGeneric(ReturnTagValueNode $firstParamTag): string
+    private function parseGeneric(ReturnTagValueNode $firstParamTag, string|null $class): string
     {
         $type = $firstParamTag->type;
 
         if (! ($type instanceof GenericTypeNode)) {
             throw new Exception('not generic');
         }
-        dump($type);
 
         $genericTypes = [];
         foreach ($type->genericTypes as $index => $genericType) {
@@ -104,6 +119,41 @@ class DocParser
             $genericTypes[0] = substr($genericTypes[0], 1);
         }
 
-        return $genericTypes[0];
+        $tmp =  $genericTypes[0];
+
+        return match ($tmp) {
+            'int' => 'int',
+            'bool' => 'bool',
+            default => $this->resolveName($class, $tmp)
+        };
+    }
+
+    private function resolveName(string $class, string $toResolve): string
+    {
+        $parser       = (new ParserFactory())->create(ParserFactory::ONLY_PHP7);
+        $traverser    = new NodeTraverser();
+        $nameResolver = new NameResolver();
+        $rc           = new ReflectionClass($class);
+// add your visitor
+        $traverser->addVisitor(new NameResolver());
+
+        $code = file_get_contents($rc->getFileName());
+
+        // parse
+        $stmts = $parser->parse($code);
+
+        //echo $code;
+        // traverse
+        $stmts = $traverser->traverse($stmts);
+
+        $found = (new NodeFinder())->findFirst($stmts, static function (Node $value) use ($toResolve) {
+            return $value instanceof Name\FullyQualified && $value->getLast() === $toResolve;
+        });
+
+        if ($found === null || ! ($found instanceof Name\FullyQualified)) {
+            throw new RuntimeException(sprintf('no resolve "%s"', $toResolve));
+        }
+
+        return substr($found->toCodeString(), 1);
     }
 }

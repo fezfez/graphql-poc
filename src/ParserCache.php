@@ -9,18 +9,23 @@ use function json_decode;
 
 class ParserCache
 {
-    /** @return array<array{class: string, name: string, return: {class: string, name: string}}}> */
+    /** @var array<array{class: string, name: string, return: {class: string, name: string}}}> */
     private array $query;
 
-    /** @return array<array{class: string, method: array<array{name: string, return: {class: string, name: string}}}> */
+    /** @var array<array{class: string, method: array<array{name: string, return: {class: string, name: string}}}> */
     private array $types;
-
+    /** @var array<array{class: string, name: string, right: string}}> */
+    private array $right;
+    /** @var array<array{class: string, name: string, right: string}}> */
+    private array $generique;
     private static self|null $instance = null;
 
     private function __construct(array $data)
     {
-        $this->query = $data['query'];
-        $this->types = $data['type'];
+        $this->query     = $data['query'];
+        $this->types     = $data['type'];
+        $this->right     = $data['right'];
+        $this->generique = $data['generique'];
     }
 
     public static function getInstance(): self
@@ -42,5 +47,28 @@ class ParserCache
     public function getTypes(): array
     {
         return $this->types;
+    }
+
+    /** @return array<array{class: string, name: string, right: string}}> */
+    public function getRight(): array
+    {
+        return $this->right;
+    }
+
+    /** @return array<array{class: string, name: string, right: string}}> */
+    public function getGenerique(): array
+    {
+        return $this->generique;
+    }
+
+    public function getRightFor(string $class, string $name): bool
+    {
+        foreach ($this->getRight() as $right) {
+            if ($right['class'] === $class && $right['name'] === $name) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

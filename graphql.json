@@ -1,28 +1,29 @@
 {
     "type": [
         {
-            "class": "FezFez\\GraphQLPoc\\Fixtures\\GenericCollection",
-            "method": [
-                {
-                    "name": "getItems",
-                    "return": {
-                        "isList": true,
-                        "of": "T"
-                    }
-                }
-            ]
-        },
-        {
             "class": "FezFez\\GraphQLPoc\\Fixtures\\MyDto",
-            "method": [
-                {
+            "method": {
+                "toto": {
                     "name": "getToto",
                     "return": {
                         "isList": false,
-                        "of": "string"
+                        "of": "string",
+                        "ici": "c"
                     }
                 }
-            ]
+            }
+        },
+        {
+            "class": "FezFez\\GraphQLPoc\\Fixtures\\GenericCollection_TO_FezFez\\GraphQLPoc\\Fixtures\\MyDto",
+            "method": {
+                "items": {
+                    "name": "getItems",
+                    "return": {
+                        "of": "FezFez\\GraphQLPoc\\Fixtures\\MyDto",
+                        "isList": true
+                    }
+                }
+            }
         }
     ],
     "query": [
@@ -31,7 +32,8 @@
             "name": "returnBool",
             "return": {
                 "isList": false,
-                "of": "bool"
+                "of": "bool",
+                "ici": "c"
             }
         },
         {
@@ -39,7 +41,8 @@
             "name": "arrayOfInt",
             "return": {
                 "isList": true,
-                "of": "int"
+                "of": "int",
+                "ici": "a"
             }
         },
         {
@@ -47,7 +50,8 @@
             "name": "listOfInt",
             "return": {
                 "isList": true,
-                "of": "int"
+                "of": "int",
+                "ici": "a"
             }
         },
         {
@@ -55,7 +59,8 @@
             "name": "listOfMyDto",
             "return": {
                 "isList": true,
-                "of": "FezFez\\GraphQLPoc\\Fixtures\\MyDto"
+                "of": "FezFez\\GraphQLPoc\\Fixtures\\MyDto",
+                "ici": "a"
             }
         },
         {
@@ -64,8 +69,22 @@
             "return": {
                 "isGenerrique": true,
                 "of": "FezFez\\GraphQLPoc\\Fixtures\\GenericCollection",
-                "child": "FezFez\\GraphQLPoc\\Fixtures\\MyDto"
+                "child": "FezFez\\GraphQLPoc\\Fixtures\\MyDto",
+                "mustCreateType": "FezFez\\GraphQLPoc\\Fixtures\\GenericCollection_TO_FezFez\\GraphQLPoc\\Fixtures\\MyDto"
             }
+        }
+    ],
+    "right": [
+        {
+            "class": "FezFez\\GraphQLPoc\\Fixtures\\SampleQuery",
+            "name": "GenericCollectionOfMyDto",
+            "right": "users"
+        }
+    ],
+    "generique": [
+        {
+            "class": "FezFez\\GraphQLPoc\\Fixtures\\GenericCollection",
+            "name": "getItems"
         }
     ]
 }
