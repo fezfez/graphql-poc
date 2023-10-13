@@ -7,10 +7,10 @@ namespace FezFez\GraphQLPoc;
 use FezFez\GraphQLPoc\Attribute\GeneriqueMethod;
 use olvlvl\ComposerAttributeCollector\Attributes;
 use ReflectionMethod;
-use TheCodingMachine\GraphQLite\Annotations\Field;
-use TheCodingMachine\GraphQLite\Annotations\Query;
-use TheCodingMachine\GraphQLite\Annotations\Right;
-use TheCodingMachine\GraphQLite\Annotations\Type;
+use FezFez\GraphQLPoc\Attribute\Field;
+use FezFez\GraphQLPoc\Attribute\Query;
+use FezFez\GraphQLPoc\Attribute\Right;
+use FezFez\GraphQLPoc\Attribute\Type;
 
 use function array_key_exists;
 use function assert;

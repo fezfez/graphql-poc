@@ -59,3 +59,8 @@ cs:
 
 cbf:
 	$(BASE) php -d memory_limit=-1 ./vendor/bin/phpcbf $(COMMAND_ARGS)
+
+poc:
+	$(BASE) composer dump
+	$(BASE) ./bin/graphql-poc
+	$(BASE) php tests/test.php

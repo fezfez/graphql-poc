@@ -12,20 +12,18 @@
     "require": {
         "php": ">=8.1",
         "ext-json": "*",
-        "psr/container": "^1.1 || ^2",
+        "psr/container": "^1.1 || ^2.0.2",
         "webonyx/graphql-php": "^v15.5",
         "olvlvl/composer-attribute-collector": "^2.0"
     },
     "require-dev": {
         "doctrine/coding-standard": "^12.0",
-        "laminas/laminas-diactoros": "^3",
-        "phpstan/phpstan": "^1.10.21",
-        "phpunit/phpunit": "^10.2.2",
+        "laminas/laminas-diactoros": "^3.2",
+        "phpstan/phpstan": "^1.10.38",
+        "phpunit/phpunit": "^10.4.1",
         "symfony/var-dumper": "^v6.3.0",
         "thecodingmachine/phpstan-strict-rules": "^1.0",
-        "pimple/pimple": "^3.0",
-        "composer/composer": "^2.0",
-        "thecodingmachine/graphqlite": "^6.2"
+        "pimple/pimple": "^3.5"
     },
     "autoload": {
         "psr-4": {

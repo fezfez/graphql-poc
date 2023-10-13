@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace FezFez\GraphQLPoc\Fixtures;
 
-use TheCodingMachine\GraphQLite\Annotations\Query;
-use TheCodingMachine\GraphQLite\Annotations\Right;
+use FezFez\GraphQLPoc\Attribute\Query;
+use FezFez\GraphQLPoc\Attribute\Right;
 
 class SampleQuery
 {

@@ -18,4 +18,4 @@ file_put_contents('graphql.json', json_encode([
 
 echo 'IR dump into ./graphql.json'."\n";
 
-exit(1);
+exit(0);

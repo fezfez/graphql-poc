@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace FezFez\GraphQLPoc\Fixtures;
 
-use TheCodingMachine\GraphQLite\Annotations\Field;
-use TheCodingMachine\GraphQLite\Annotations\Type;
+use FezFez\GraphQLPoc\Attribute\Field;
+use FezFez\GraphQLPoc\Attribute\Type;
 
 #[Type]
 class MyDto
