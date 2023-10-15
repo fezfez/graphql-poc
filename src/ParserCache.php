@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace FezFez\GraphQLPoc;
 
+use Exception;
+use RuntimeException;
+
+use function array_key_exists;
 use function file_get_contents;
 use function json_decode;
+use function sprintf;
 
 class ParserCache
 {
@@ -49,6 +54,16 @@ class ParserCache
         return $this->types;
     }
 
+    public function getTypeByName(string $shortName): array
+    {
+        return array_key_exists($shortName, $this->types) ? $this->types[$shortName] : throw new Exception(sprintf('Unknown graphql type: %s', $shortName));
+    }
+
+    public function getMethodsByTypeName(string $shortName): array
+    {
+        return array_key_exists($shortName, $this->types) ? $this->types[$shortName]['method'] : throw new Exception(sprintf('Unknown graphql type: %s', $shortName));
+    }
+
     /** @return array<array{class: string, name: string, right: string}}> */
     public function getRight(): array
     {
@@ -61,14 +76,19 @@ class ParserCache
         return $this->generique;
     }
 
-    public function getRightFor(string $class, string $name): bool
+    public function getRightFor(string $class, string $name): string|null
     {
-        foreach ($this->getRight() as $right) {
-            if ($right['class'] === $class && $right['name'] === $name) {
-                return true;
+        return array_key_exists($name, $this->right) ? $this->right[$name]['right'] : null;
+    }
+
+    public function getArgsFor(string $class, string $name): array
+    {
+        foreach ($this->query as $query) {
+            if ($query['name'] === $name) {
+                return $query['args'];
             }
         }
 
-        return false;
+        throw new RuntimeException('ezfez');
     }
 }

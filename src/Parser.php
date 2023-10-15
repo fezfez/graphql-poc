@@ -6,11 +6,14 @@ namespace FezFez\GraphQLPoc;
 
 use FezFez\GraphQLPoc\Attribute\Field;
 use FezFez\GraphQLPoc\Attribute\GeneriqueMethod;
+use FezFez\GraphQLPoc\Attribute\InjectUser;
+use FezFez\GraphQLPoc\Attribute\Logged;
 use FezFez\GraphQLPoc\Attribute\Query;
 use FezFez\GraphQLPoc\Attribute\Right;
 use FezFez\GraphQLPoc\Attribute\Type;
 use olvlvl\ComposerAttributeCollector\Attributes;
 use ReflectionMethod;
+use ReflectionParameter;
 
 use function array_key_exists;
 use function assert;
@@ -35,7 +38,33 @@ class Parser
             $method = new ReflectionMethod($target->class, $target->name);
             $return = $this->docParser->getReturnTypeFromDocBlock($method, $target->class);
 
-            $list[] = ['class' => $target->class, 'name' => $target->name, 'return' => $return];
+            $args           = [];
+            $mustInjectUser = static function (ReflectionParameter $parameter) {
+                foreach ($parameter->getAttributes() as $attribute) {
+                    if ($attribute->getName() === InjectUser::class) {
+                        return true;
+                    }
+                }
+
+                return false;
+            };
+
+            foreach ($method->getParameters() as $parameter) {
+                $args[] = [
+                    'name' => $parameter->getName(),
+                    'type' => (string) $parameter->getType(),
+                    'hidden' => $mustInjectUser($parameter),
+                    'injectUser' => $mustInjectUser($parameter),
+                ];
+            }
+
+            $list[] = [
+                'class' => $target->class,
+                'name' => $target->name,
+                'logged' => $this->hasAttrForClassAndMethod($target->class, Logged::class, $target->name),
+                'return' => $return,
+                'args' => $args,
+            ];
         }
 
         return $list;
@@ -50,7 +79,7 @@ class Parser
             $attribut = $target->attribute;
 
             assert($attribut instanceof Right);
-            $list[] = ['class' => $target->class, 'name' => $target->name, 'right' => $attribut->getName()];
+            $list[$target->name] = ['class' => $target->class, 'right' => $attribut->getName()];
         }
 
         return $list;
@@ -93,7 +122,7 @@ class Parser
                 ];
             }
 
-            $list[] = ['class' => $target->name, 'method' => $methodeList];
+            $list[$target->name] = ['method' => $methodeList];
         }
 
         foreach ($this->getQuery() as $item) {
@@ -114,9 +143,24 @@ class Parser
                 ];
             }
 
-            $list[] = ['class' => $item['return']['mustCreateType'], 'method' => $methodeList];
+            $list[$item['return']['mustCreateType']] = ['method' => $methodeList];
         }
 
         return $list;
+    }
+
+    private function hasAttrForClassAndMethod(string $class, string $attriut, string $method): bool
+    {
+        $list = Attributes::filterTargetMethods(static function (string $attributName, string $className) use ($class, $attriut) {
+            return $className === $class && $attributName === $attriut;
+        });
+
+        foreach ($list as $item) {
+            if ($item->name === $method) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

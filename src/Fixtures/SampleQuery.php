@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace FezFez\GraphQLPoc\Fixtures;
 
+use FezFez\GraphQLPoc\Attribute\InjectUser;
+use FezFez\GraphQLPoc\Attribute\Logged;
 use FezFez\GraphQLPoc\Attribute\Query;
 use FezFez\GraphQLPoc\Attribute\Right;
+use FezFez\GraphQLPoc\Security\UserFormContext;
 
 class SampleQuery
 {
@@ -17,16 +20,18 @@ class SampleQuery
 
     /** @return array<int> */
     #[Query(name: 'arrayOfInt')]
-    public function arrayOfInt(): array
+    #[Logged]
+    public function arrayOfInt(int $value): array
     {
-        return [1, 2, 3];
+        return [1, 2, 3, $value];
     }
 
     /** @return list<int> */
     #[Query(name: 'listOfInt')]
-    public function listOfInt(): array
+    public function listOfInt(#[InjectUser]
+    UserFormContext $userFormContext,): array
     {
-        return [1, 2, 3];
+        return [1, 2, 3, $userFormContext->user->id];
     }
 
     /** @return list<MyDto> */

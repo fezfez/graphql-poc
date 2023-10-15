@@ -2,20 +2,17 @@
 
 declare(strict_types=1);
 
+use FezFez\GraphQLPoc\assets\PsrHandler;
 use FezFez\GraphQLPoc\Fixtures\SampleQuery;
 use FezFez\GraphQLPoc\SchemaFactory;
 use FezFez\GraphQLPoc\Security\GetUserFromContext;
 use FezFez\GraphQLPoc\Security\IsAllowed;
 use FezFez\GraphQLPoc\Security\UserFormContext;
-use GraphQL\GraphQL;
-use GraphQL\Type\Schema;
-use Laminas\Diactoros\Response\JsonResponse;
+use GraphQL\Server\ServerConfig;
 use Laminas\Diactoros\ServerRequest;
-use Laminas\Diactoros\StreamFactory;
 use Laminas\Diactoros\Uri;
 use Pimple\Container;
 use Pimple\Psr11\Container as PsrContainer;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 chdir(__DIR__ . '/..');
@@ -34,7 +31,7 @@ $container[GetUserFromContext::class] = new class implements GetUserFromContext 
     }
 };
 $container[IsAllowed::class]          = new class implements IsAllowed {
-    public function get(UserFormContext $userFormContext): bool
+    public function get(UserFormContext $userFormContext, string $right): bool
     {
         return $userFormContext->user->id === 10;
     }
@@ -43,44 +40,23 @@ $container[IsAllowed::class]          = new class implements IsAllowed {
 $psr11 = new PsrContainer($container);
 
 
-class HandlerMe
-{
-    public function __construct(private Schema $schema)
-    {
-    }
+$schema = (new SchemaFactory())->__invoke($psr11, $psr11->get(GetUserFromContext::class), $psr11->get(IsAllowed::class));
+$config = new ServerConfig();
+$config->setSchema($schema);
 
-    public function __invoke(ServerRequestInterface $request): ResponseInterface
-    {
-        $input = json_decode($request->getBody()->__toString(), true);
-
-        $query          = $input['query'] ?? '';
-        $variableValues = $input['variables'] ?? null;
-        //$debug          = DebugFlag::NONE | DebugFlag::RETHROW_INTERNAL_EXCEPTIONS | DebugFlag::RETHROW_UNSAFE_EXCEPTIONS;
-        //$debug          = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
-
-        $serverConfig = GraphQL::executeQuery($this->schema, $query, null, $request, $variableValues);
-
-        $result = $serverConfig->toArray();
-
-        return new JsonResponse($result, count($serverConfig->errors) ? 500 : 200);
-    }
-}
-
-
-
-
-$handle = new HandlerMe((new SchemaFactory())->__invoke($psr11));
+$handle = new PsrHandler($config);
 
 $request = (new ServerRequest())
     ->withUri(new Uri('http://example.com'))
     ->withMethod('POST')
     ->withAddedHeader('Authorization', 'Bearer toyoyo')
-    ->withAddedHeader('Content-Type', 'application/json')
-    ->withBody((new StreamFactory())->createStream(json_encode([
+    ->withAddedHeader('content-type', 'application/json')
+    ->withAttribute('myUser', '10')
+    ->withParsedBody([
         'query' => 'query {
                 listOfInt,
                 returnBool,
-                arrayOfInt,
+                arrayOfInt(value : 1),
                 listOfMyDto {
                     toto
                 },
@@ -90,8 +66,7 @@ $request = (new ServerRequest())
                     }
                 }
             }',
-    ])))
-    ->withAttribute('myUser', '10');
+    ]);
 
 dump($handle->__invoke($request)->getBody()->getContents());
 
@@ -101,11 +76,11 @@ $request = (new Laminas\Diactoros\ServerRequest())
     ->withMethod('POST')
     ->withAddedHeader('Authorization', 'Bearer toyoyo')
     ->withAddedHeader('Content-Type', 'application/json')
-    ->withBody((new StreamFactory())->createStream(json_encode([
+    ->withParsedBody([
         'query' => 'query {
                 listOfInt,
                 returnBool,
-                arrayOfInt,
+                arrayOfInt(value : 1),
                 listOfMyDto {
                     toto
                 },
@@ -115,7 +90,7 @@ $request = (new Laminas\Diactoros\ServerRequest())
                     }
                 }
             }',
-    ])))
+    ])
     ->withAttribute('myUser', '55');
 
 dump($handle->__invoke($request)->getBody()->getContents());

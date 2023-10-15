@@ -6,5 +6,5 @@ namespace FezFez\GraphQLPoc\Security;
 
 interface IsAllowed
 {
-    public function get(UserFormContext $userFormContext): bool;
+    public function get(UserFormContext $userFormContext, string $right): bool;
 }

@@ -4,128 +4,76 @@ declare(strict_types=1);
 
 namespace FezFez\GraphQLPoc;
 
-use Exception;
-use GraphQL\Error\InvariantViolation;
-use GraphQL\Type\Definition\NamedType;
+use GraphQL\Type\Definition\ListOfType;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\ResolveInfo;
-use GraphQL\Type\Definition\ScalarType;
 use GraphQL\Type\Definition\Type;
 
 use function array_key_exists;
-use function lcfirst;
-use function sprintf;
-use function strtolower;
 
 class TypeLoader
 {
-    /** @var array<string, Type&NamedType> */
-    private static array $types = [];
+    /** @var array<string, Type> */
+    private array $types;
+    /** @var array<string, ListOfType> */
+    private array $list = [];
 
-    public static function byTypeName(string $shortName): mixed
+    public function __construct(private ParserCache $parser)
     {
-        return self::byTypeNameaaa(['isList' => false, 'of' => $shortName]);
+        $this->types = [
+            'string' => Type::string(),
+            'bool' => Type::boolean(),
+            'float' => Type::float(),
+            'id' => Type::id(),
+            'int' => Type::int(),
+        ];
     }
 
-    /**
-     * @return Type&NamedType
-     *
-     * @throws Exception
-     */
-    public static function byTypeNameaaa(array $description): Type
+    public function byTypeName(string $shortName): Type
     {
-        $shortName = array_key_exists('mustCreateType', $description) ? $description['mustCreateType'] : $description['of'];
-        $cacheName = strtolower($shortName);
+        return $this->byDescription($shortName, false, null);
+    }
 
-        if (! array_key_exists($cacheName, self::$types)) {
-            self::$types[$cacheName] = self::resolveType($shortName);
+    public function byDescription(string $of, bool $isList, string|null $mustCreateType): Type
+    {
+        $shortName = $mustCreateType ?? ($of === 'boolean' ? 'bool' : $of);
+
+        if (! array_key_exists($shortName, $this->types)) {
+            $this->types[$shortName] = $this->buildType($shortName);
         }
 
-        if (array_key_exists('isList', $description) && $description['isList'] === true) {
-            return Type::listOf(self::$types[$cacheName]);
+        if (! $isList) {
+            return $this->types[$shortName];
         }
 
-        return self::$types[$cacheName];
-    }
-
-    private static function resolveType(string $shortName): Type
-    {
-        $method = lcfirst($shortName);
-
-        switch ($method) {
-            case 'string':
-                return self::string();
-
-            case 'bool':
-            case 'boolean':
-                return self::boolean();
-
-            case 'float':
-                return self::float();
-
-            case 'id':
-                return self::id();
-
-            case 'int':
-                return self::int();
+        if (! array_key_exists($shortName, $this->list)) {
+            $this->list[$shortName] =  Type::listOf($this->types[$shortName]);
         }
 
-        $generique = ParserCache::getInstance()->getGenerique();
+        return $this->list[$shortName];
+    }
 
-        foreach (ParserCache::getInstance()->getTypes() as $type) {
-            if ($type['class'] === $shortName) {
-                $filds = [];
+    private function buildType(string $shortName): ObjectType
+    {
+        $methods = $this->parser->getMethodsByTypeName($shortName);
+        $filds   = [];
 
-                foreach ($type['method'] as $exposedName => $method) {
-                    $filds[$exposedName] = self::byTypeNameaaa($method['return']);
-                }
-
-                return new ObjectType([
-                    'name' => $type['class'],
-                    'fields' => $filds,
-                    'resolveField' => static function (mixed $obj, array $args, $context, ResolveInfo $info) use ($type) {
-                        if ($info->fieldName === 'items') {
-                            return $obj->getItems($args);
-                        }
-
-                        $fieldName = $type['method'][$info->fieldName]['name'];
-
-                        return $obj->$fieldName($args);
-                    },
-                ]);
-            }
+        foreach ($methods as $exposedName => $method) {
+            $filds[$exposedName] = $this->byDescription(
+                $method['return']['of'],
+                $method['return']['isList'],
+                array_key_exists('mustCreateType', $method['return']) ? $method['return']['mustCreateType'] : null,
+            );
         }
 
-        throw new Exception(sprintf('Unknown graphql type: %s', $shortName));
-    }
+        return new ObjectType([
+            'name' => $shortName,
+            'fields' => $filds,
+            'resolveField' => static function (mixed $obj, array $args, $context, ResolveInfo $info) use ($methods) {
+                $fieldName = $methods[$info->fieldName]['name'];
 
-    /** @throws InvariantViolation */
-    public static function boolean(): ScalarType
-    {
-        return Type::boolean();
-    }
-
-    /** @throws InvariantViolation */
-    public static function float(): ScalarType
-    {
-        return Type::float();
-    }
-
-    /** @throws InvariantViolation */
-    public static function id(): ScalarType
-    {
-        return Type::id();
-    }
-
-    /** @throws InvariantViolation */
-    public static function int(): ScalarType
-    {
-        return Type::int();
-    }
-
-    /** @throws InvariantViolation */
-    public static function string(): ScalarType
-    {
-        return Type::string();
+                return $obj->$fieldName($args);
+            },
+        ]);
     }
 }

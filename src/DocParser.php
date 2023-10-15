@@ -62,6 +62,7 @@ class DocParser
             $firstParamTag = $this->getReturnTags($comment);
             if (class_exists($return->getName())) {
                 return [
+                    'isList' => false,
                     'isGenerrique' => true,
                     'of' => $return->getName(),
                     'child' => $this->parseGeneric($firstParamTag, $class),

@@ -23,7 +23,8 @@
         "phpunit/phpunit": "^10.4.1",
         "symfony/var-dumper": "^v6.3.0",
         "thecodingmachine/phpstan-strict-rules": "^1.0",
-        "pimple/pimple": "^3.5"
+        "pimple/pimple": "^3.5",
+        "phpbench/phpbench": "^1.2"
     },
     "autoload": {
         "psr-4": {

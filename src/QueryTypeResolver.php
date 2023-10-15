@@ -10,36 +10,41 @@ use FezFez\GraphQLPoc\Security\IsAllowed;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-use function assert;
 use function sprintf;
 
 class QueryTypeResolver
 {
     public function __construct(
         private readonly ContainerInterface $container,
-        private readonly array $query,
         private readonly ParserCache $parser,
+        private readonly GetUserFromContext $getUserFromContext,
+        private readonly IsAllowed $isAllowed,
     ) {
     }
 
-    public function __invoke($rootValue, array $args, ServerRequestInterface $context): mixed
+    public function __invoke($rootValue, array $args, ServerRequestInterface $context, string $class, string $method): mixed
     {
-        $method = $this->query['name'];
+        $right      = $this->parser->getRightFor($class, $method);
+        $parserArgs = $this->parser->getArgsFor($class, $method);
+        $argsToPush = [];
 
-        if ($this->parser->getRightFor($this->query['class'], $this->query['name'])) {
-            $getUserFromContext = $this->container->get(GetUserFromContext::class);
-            $isAllowed          = $this->container->get(IsAllowed::class);
+        foreach ($parserArgs as $key => $arg) {
+            if ($arg['injectUser']) {
+                $argsToPush[] = $this->getUserFromContext->get($context);
+                continue;
+            }
 
-            assert($getUserFromContext instanceof GetUserFromContext);
-            assert($isAllowed instanceof IsAllowed);
+            $argsToPush[] = $args[$arg['name']];
+        }
 
-            $user = $getUserFromContext->get($context);
+        if ($right) {
+            $user = $this->getUserFromContext->get($context);
 
-            if (! $isAllowed->get($user)) {
-                throw new NotAuthorized(sprintf('not authorized to run %s', $this->query['name']));
+            if (! $this->isAllowed->get($user, $right)) {
+                throw new NotAuthorized(sprintf('not authorized to run %s', $method));
             }
         }
 
-        return $this->container->get($this->query['class'])->$method($args);
+        return $this->container->get($class)->$method(...$argsToPush);
     }
 }

@@ -1,7 +1,6 @@
 {
-    "type": [
-        {
-            "class": "FezFez\\GraphQLPoc\\Fixtures\\MyDto",
+    "type": {
+        "FezFez\\GraphQLPoc\\Fixtures\\MyDto": {
             "method": {
                 "toto": {
                     "name": "getToto",
@@ -13,8 +12,7 @@
                 }
             }
         },
-        {
-            "class": "FezFez\\GraphQLPoc\\Fixtures\\GenericCollection_TO_FezFez\\GraphQLPoc\\Fixtures\\MyDto",
+        "FezFez\\GraphQLPoc\\Fixtures\\GenericCollection_TO_FezFez\\GraphQLPoc\\Fixtures\\MyDto": {
             "method": {
                 "items": {
                     "name": "getItems",
@@ -25,62 +23,86 @@
                 }
             }
         }
-    ],
+    },
     "query": [
         {
             "class": "FezFez\\GraphQLPoc\\Fixtures\\SampleQuery",
             "name": "returnBool",
+            "logged": false,
             "return": {
                 "isList": false,
                 "of": "bool",
                 "ici": "c"
-            }
+            },
+            "args": []
         },
         {
             "class": "FezFez\\GraphQLPoc\\Fixtures\\SampleQuery",
             "name": "arrayOfInt",
+            "logged": true,
             "return": {
                 "isList": true,
                 "of": "int",
                 "ici": "a"
-            }
+            },
+            "args": [
+                {
+                    "name": "value",
+                    "type": "int",
+                    "hidden": false,
+                    "injectUser": false
+                }
+            ]
         },
         {
             "class": "FezFez\\GraphQLPoc\\Fixtures\\SampleQuery",
             "name": "listOfInt",
+            "logged": false,
             "return": {
                 "isList": true,
                 "of": "int",
                 "ici": "a"
-            }
+            },
+            "args": [
+                {
+                    "name": "userFormContext",
+                    "type": "FezFez\\GraphQLPoc\\Security\\UserFormContext",
+                    "hidden": true,
+                    "injectUser": true
+                }
+            ]
         },
         {
             "class": "FezFez\\GraphQLPoc\\Fixtures\\SampleQuery",
             "name": "listOfMyDto",
+            "logged": false,
             "return": {
                 "isList": true,
                 "of": "FezFez\\GraphQLPoc\\Fixtures\\MyDto",
                 "ici": "a"
-            }
+            },
+            "args": []
         },
         {
             "class": "FezFez\\GraphQLPoc\\Fixtures\\SampleQuery",
             "name": "GenericCollectionOfMyDto",
+            "logged": false,
             "return": {
+                "isList": false,
                 "isGenerrique": true,
                 "of": "FezFez\\GraphQLPoc\\Fixtures\\GenericCollection",
                 "child": "FezFez\\GraphQLPoc\\Fixtures\\MyDto",
                 "mustCreateType": "FezFez\\GraphQLPoc\\Fixtures\\GenericCollection_TO_FezFez\\GraphQLPoc\\Fixtures\\MyDto"
-            }
+            },
+            "args": []
         }
     ],
-    "right": [
-        {
+    "right": {
+        "GenericCollectionOfMyDto": {
             "class": "FezFez\\GraphQLPoc\\Fixtures\\SampleQuery",
-            "name": "GenericCollectionOfMyDto",
             "right": "users"
         }
-    ],
+    },
     "generique": [
         {
             "class": "FezFez\\GraphQLPoc\\Fixtures\\GenericCollection",
