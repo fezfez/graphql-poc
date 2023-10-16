@@ -28,9 +28,10 @@ class SampleQuery
 
     /** @return list<int> */
     #[Query(name: 'listOfInt')]
-    public function listOfInt(#[InjectUser]
-    UserFormContext $userFormContext,): array
-    {
+    public function listOfInt(
+        #[InjectUser]
+        UserFormContext $userFormContext,
+    ): array {
         return [1, 2, 3, $userFormContext->user->id];
     }
 
@@ -45,6 +46,14 @@ class SampleQuery
     #[Query(name: 'GenericCollectionOfMyDto')]
     #[Right(name :'users')]
     public function GenericCollectionOfMyDto(): GenericCollection
+    {
+        return new GenericCollection(new MyDto(), new MyDto());
+    }
+
+    /** @return GenericCollection[MyDto] */
+    #[Query(name: 'myAlias')]
+    #[Right(name :'users')]
+    public function GenericCollectionOfMyDtoAsArray(): GenericCollection
     {
         return new GenericCollection(new MyDto(), new MyDto());
     }

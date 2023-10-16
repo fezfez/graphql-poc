@@ -10,13 +10,13 @@ use FezFez\GraphQLPoc\SchemaFactory;
 use FezFez\GraphQLPoc\Security\GetUserFromContext;
 use FezFez\GraphQLPoc\Security\IsAllowed;
 use FezFez\GraphQLPoc\Security\UserFormContext;
-use GraphQL\Executor\Promise\Adapter\SyncPromiseAdapter;
 use GraphQL\Server\ServerConfig;
 use Laminas\Diactoros\ServerRequest;
 use Laminas\Diactoros\Uri;
 use Pimple\Container;
 use Pimple\Psr11\Container as PsrContainer;
 use Psr\Http\Message\ServerRequestInterface;
+use stdClass;
 
 class QueryBench
 {
@@ -46,7 +46,6 @@ class QueryBench
 
         $config = new ServerConfig();
         $config->setSchema((new SchemaFactory())->__invoke($psr11, $psr11->get(GetUserFromContext::class), $psr11->get(IsAllowed::class)));
-        $config->setPromiseAdapter(new SyncPromiseAdapter());
 
         $this->handle = new PsrHandler($config);
     }
@@ -67,11 +66,16 @@ class QueryBench
                 'query' => 'query {
                 listOfInt,
                 returnBool,
-                arrayOfInt,
+                arrayOfInt(value : 5),
                 listOfMyDto {
                     toto
                 },
                 GenericCollectionOfMyDto {
+                    items {
+                        toto
+                    }
+                },
+                myAlias {
                     items {
                         toto
                     }

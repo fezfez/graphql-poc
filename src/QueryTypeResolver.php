@@ -10,6 +10,7 @@ use FezFez\GraphQLPoc\Security\IsAllowed;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
+use function array_key_exists;
 use function sprintf;
 
 class QueryTypeResolver
@@ -28,13 +29,13 @@ class QueryTypeResolver
         $parserArgs = $this->parser->getArgsFor($class, $method);
         $argsToPush = [];
 
-        foreach ($parserArgs as $key => $arg) {
+        foreach ($parserArgs as $arg) {
             if ($arg['injectUser']) {
                 $argsToPush[] = $this->getUserFromContext->get($context);
                 continue;
             }
 
-            $argsToPush[] = $args[$arg['name']];
+            $argsToPush[] = array_key_exists($arg['name'], $args) ? $args[$arg['name']] : null;
         }
 
         if ($right) {

@@ -28,6 +28,7 @@
         {
             "class": "FezFez\\GraphQLPoc\\Fixtures\\SampleQuery",
             "name": "returnBool",
+            "exposedName": "returnBool",
             "logged": false,
             "return": {
                 "isList": false,
@@ -39,6 +40,7 @@
         {
             "class": "FezFez\\GraphQLPoc\\Fixtures\\SampleQuery",
             "name": "arrayOfInt",
+            "exposedName": "arrayOfInt",
             "logged": true,
             "return": {
                 "isList": true,
@@ -57,6 +59,7 @@
         {
             "class": "FezFez\\GraphQLPoc\\Fixtures\\SampleQuery",
             "name": "listOfInt",
+            "exposedName": "listOfInt",
             "logged": false,
             "return": {
                 "isList": true,
@@ -75,6 +78,7 @@
         {
             "class": "FezFez\\GraphQLPoc\\Fixtures\\SampleQuery",
             "name": "listOfMyDto",
+            "exposedName": "listOfMyDto",
             "logged": false,
             "return": {
                 "isList": true,
@@ -86,6 +90,21 @@
         {
             "class": "FezFez\\GraphQLPoc\\Fixtures\\SampleQuery",
             "name": "GenericCollectionOfMyDto",
+            "exposedName": "GenericCollectionOfMyDto",
+            "logged": false,
+            "return": {
+                "isList": false,
+                "isGenerrique": true,
+                "of": "FezFez\\GraphQLPoc\\Fixtures\\GenericCollection",
+                "child": "FezFez\\GraphQLPoc\\Fixtures\\MyDto",
+                "mustCreateType": "FezFez\\GraphQLPoc\\Fixtures\\GenericCollection_TO_FezFez\\GraphQLPoc\\Fixtures\\MyDto"
+            },
+            "args": []
+        },
+        {
+            "class": "FezFez\\GraphQLPoc\\Fixtures\\SampleQuery",
+            "name": "GenericCollectionOfMyDtoAsArray",
+            "exposedName": "myAlias",
             "logged": false,
             "return": {
                 "isList": false,
@@ -99,6 +118,10 @@
     ],
     "right": {
         "GenericCollectionOfMyDto": {
+            "class": "FezFez\\GraphQLPoc\\Fixtures\\SampleQuery",
+            "right": "users"
+        },
+        "GenericCollectionOfMyDtoAsArray": {
             "class": "FezFez\\GraphQLPoc\\Fixtures\\SampleQuery",
             "right": "users"
         }

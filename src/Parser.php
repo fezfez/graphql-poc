@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FezFez\GraphQLPoc;
 
+use Exception;
 use FezFez\GraphQLPoc\Attribute\Field;
 use FezFez\GraphQLPoc\Attribute\GeneriqueMethod;
 use FezFez\GraphQLPoc\Attribute\InjectUser;
@@ -17,7 +18,10 @@ use ReflectionParameter;
 
 use function array_key_exists;
 use function assert;
+use function count;
+use function implode;
 use function lcfirst;
+use function sprintf;
 use function str_replace;
 
 class Parser
@@ -32,9 +36,11 @@ class Parser
     /** @return array<array{class: string, name: string, return: {class: string, name: string}}}> */
     public function getQuery(): array
     {
-        $list = [];
+        $list                = [];
+        $exposedNameConflict = [];
 
         foreach (Attributes::findTargetMethods(Query::class) as $target) {
+            $rClass = new \ReflectionClass($target->class);
             $method = new ReflectionMethod($target->class, $target->name);
             $return = $this->docParser->getReturnTypeFromDocBlock($method, $target->class);
 
@@ -58,13 +64,46 @@ class Parser
                 ];
             }
 
+            $attribute = $target->attribute;
+            assert($attribute instanceof Query);
+            $exposedName = $attribute->getName() ?? $target->name;
+
+            if (! array_key_exists($exposedName, $exposedNameConflict)) {
+                $exposedNameConflict[$exposedName] = [];
+            }
+
+            $exposedNameConflict[$exposedName][] = [
+                'class' => $target->class,
+                'name' => $target->name,
+                'phpFile' => $rClass->getFileName(),
+            ];
+
             $list[] = [
                 'class' => $target->class,
                 'name' => $target->name,
+                'exposedName' => $exposedName,
                 'logged' => $this->hasAttrForClassAndMethod($target->class, Logged::class, $target->name),
                 'return' => $return,
                 'args' => $args,
             ];
+        }
+
+        $message = null;
+        foreach ($exposedNameConflict as $exposedName => $item) {
+            if (count($item) === 1) {
+                continue;
+            }
+
+            $conflictToString = [];
+            foreach ($item as $value) {
+                $conflictToString[] = sprintf('"%s->%s" (%s)',  $value['class'], $value['name'], $value['phpFile']);
+            }
+
+            $message .= '"' . $exposedName . '" found in ' . "\n- ".implode("\n- ", $conflictToString) . "\n";
+        }
+
+        if ($message !== null) {
+            throw new Exception(sprintf('exposed name conflict' . "\n" . '%s', $message));
         }
 
         return $list;

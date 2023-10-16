@@ -31,7 +31,7 @@ class QueryType extends ObjectType
                 ];
             }
 
-            $fields[$query['name']] = [
+            $fields[$query['exposedName']] = [
                 'type' => $typeLoader->byDescription(
                     $query['return']['of'],
                     $query['return']['isList'],

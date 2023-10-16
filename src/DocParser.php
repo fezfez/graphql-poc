@@ -13,6 +13,7 @@ use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\ParserFactory;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ReturnTagValueNode;
 use PHPStan\PhpDocParser\Ast\Type\GenericTypeNode;
+use PHPStan\PhpDocParser\Ast\Type\OffsetAccessTypeNode;
 use PHPStan\PhpDocParser\Lexer\Lexer;
 use PHPStan\PhpDocParser\Parser\ConstExprParser;
 use PHPStan\PhpDocParser\Parser\PhpDocParser;
@@ -97,6 +98,10 @@ class DocParser
     private function parseGeneric(ReturnTagValueNode $firstParamTag, string|null $class): string
     {
         $type = $firstParamTag->type;
+
+        if ($type instanceof OffsetAccessTypeNode) {
+            return $this->resolveName($class, $type->offset->__toString());
+        }
 
         if (! ($type instanceof GenericTypeNode)) {
             throw new Exception('not generic');

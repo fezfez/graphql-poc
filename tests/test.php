@@ -64,7 +64,13 @@ $request = (new ServerRequest())
                     items {
                         toto
                     }
+                },
+                myAlias {
+                    items {
+                        toto
+                    }
                 }
+                
             }',
     ]);
 
