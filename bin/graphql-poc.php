@@ -6,6 +6,7 @@ use FezFez\GraphQLPoc\Parser;
 exec('composer dump');
 
 require 'vendor/autoload.php';
+require 'vendor/attributes.php';
 
 
 $parser = new Parser();
