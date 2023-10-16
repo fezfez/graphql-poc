@@ -29,15 +29,15 @@
     "autoload": {
         "psr-4": {
             "FezFez\\GraphQLPoc\\": "src/"
-        },
-        "files": [
-            "vendor/attributes.php"
-        ]
+        }
     },
     "autoload-dev": {
         "psr-4": {
             "FezFez\\GraphQLPoc\\": "tests/"
-        }
+        },
+        "files": [
+            "vendor/attributes.php"
+        ]
     },
     "scripts": {
         "phpstan": "phpstan analyse -c phpstan.neon --no-progress -vvv --memory-limit=1G",
