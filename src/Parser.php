@@ -12,6 +12,14 @@ use FezFez\GraphQLPoc\Attribute\Logged;
 use FezFez\GraphQLPoc\Attribute\Query;
 use FezFez\GraphQLPoc\Attribute\Right;
 use FezFez\GraphQLPoc\Attribute\Type;
+
+use TheCodingMachine\GraphQLite\Annotations\Field as FieldBis;
+use TheCodingMachine\GraphQLite\Annotations\InjectUser as InjectUserBis;
+use TheCodingMachine\GraphQLite\Annotations\Logged as LoggedBis;
+use TheCodingMachine\GraphQLite\Annotations\Query as QueryBis;
+use TheCodingMachine\GraphQLite\Annotations\Right as RightBis;
+use TheCodingMachine\GraphQLite\Annotations\Type as TypeBis;
+
 use olvlvl\ComposerAttributeCollector\Attributes;
 use ReflectionMethod;
 use ReflectionParameter;
@@ -39,7 +47,7 @@ class Parser
         $list                = [];
         $exposedNameConflict = [];
 
-        foreach (Attributes::findTargetMethods(Query::class) as $target) {
+        foreach ([...Attributes::findTargetMethods(Query::class), ...Attributes::findTargetMethods(QueryBis::class)] as $target) {
             $rClass = new \ReflectionClass($target->class);
             $method = new ReflectionMethod($target->class, $target->name);
             $return = $this->docParser->getReturnTypeFromDocBlock($method, $target->class);
@@ -47,7 +55,7 @@ class Parser
             $args           = [];
             $mustInjectUser = static function (ReflectionParameter $parameter) {
                 foreach ($parameter->getAttributes() as $attribute) {
-                    if ($attribute->getName() === InjectUser::class) {
+                    if ($attribute->getName() === InjectUser::class || $attribute->getName() === InjectUserBis::class) {
                         return true;
                     }
                 }
@@ -65,7 +73,7 @@ class Parser
             }
 
             $attribute = $target->attribute;
-            assert($attribute instanceof Query);
+            assert($attribute instanceof Query || $attribute instanceof QueryBis);
             $exposedName = $attribute->getName() ?? $target->name;
 
             if (! array_key_exists($exposedName, $exposedNameConflict)) {
@@ -82,7 +90,7 @@ class Parser
                 'class' => $target->class,
                 'name' => $target->name,
                 'exposedName' => $exposedName,
-                'logged' => $this->hasAttrForClassAndMethod($target->class, Logged::class, $target->name),
+                'logged' => $this->hasAttrForClassAndMethod($target->class, Logged::class, LoggedBis::class, $target->name),
                 'return' => $return,
                 'args' => $args,
             ];
@@ -114,7 +122,7 @@ class Parser
     {
         $list = [];
 
-        foreach (Attributes::findTargetMethods(Right::class) as $target) {
+        foreach ([...Attributes::findTargetMethods(Right::class), ...Attributes::findTargetMethods(RightBis::class)] as $target) {
             $attribut = $target->attribute;
 
             assert($attribut instanceof Right);
@@ -144,9 +152,9 @@ class Parser
     {
         $list = [];
 
-        foreach (Attributes::findTargetClasses(Type::class) as $target) {
+        foreach ([...Attributes::findTargetClasses(Type::class), ...Attributes::findTargetClasses(TypeBis::class)] as $target) {
             $fieldList = Attributes::filterTargetMethods(static function (string $attributName, string $className) use ($target) {
-                return $className === $target->name && $attributName === Field::class;
+                return $className === $target->name && ($attributName === Field::class || $attributName === FieldBis::class);
             });
 
             $methodeList = [];
@@ -188,10 +196,10 @@ class Parser
         return $list;
     }
 
-    private function hasAttrForClassAndMethod(string $class, string $attriut, string $method): bool
+    private function hasAttrForClassAndMethod(string $class, string $attriut, string $orAttr, string $method): bool
     {
-        $list = Attributes::filterTargetMethods(static function (string $attributName, string $className) use ($class, $attriut) {
-            return $className === $class && $attributName === $attriut;
+        $list = Attributes::filterTargetMethods(static function (string $attributName, string $className) use ($class, $attriut, $orAttr) {
+            return $className === $class && ($attributName === $attriut || $attributName === $orAttr);
         });
 
         foreach ($list as $item) {
