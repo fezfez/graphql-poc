@@ -42,6 +42,13 @@ class SampleQuery
         return [new MyDto(), new MyDto()];
     }
 
+    /** @return MyDto[] */
+    #[Query(name: 'arrayOfMydro')]
+    public function arrayOfMydro(): array
+    {
+        return [new MyDto(), new MyDto()];
+    }
+
     /** @return GenericCollection<MyDto> */
     #[Query(name: 'GenericCollectionOfMyDto')]
     #[Right(name :'users')]

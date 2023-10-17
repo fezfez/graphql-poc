@@ -12,17 +12,16 @@ use FezFez\GraphQLPoc\Attribute\Logged;
 use FezFez\GraphQLPoc\Attribute\Query;
 use FezFez\GraphQLPoc\Attribute\Right;
 use FezFez\GraphQLPoc\Attribute\Type;
-
+use olvlvl\ComposerAttributeCollector\Attributes;
+use ReflectionClass;
+use ReflectionMethod;
+use ReflectionParameter;
 use TheCodingMachine\GraphQLite\Annotations\Field as FieldBis;
 use TheCodingMachine\GraphQLite\Annotations\InjectUser as InjectUserBis;
 use TheCodingMachine\GraphQLite\Annotations\Logged as LoggedBis;
 use TheCodingMachine\GraphQLite\Annotations\Query as QueryBis;
 use TheCodingMachine\GraphQLite\Annotations\Right as RightBis;
 use TheCodingMachine\GraphQLite\Annotations\Type as TypeBis;
-
-use olvlvl\ComposerAttributeCollector\Attributes;
-use ReflectionMethod;
-use ReflectionParameter;
 
 use function array_key_exists;
 use function assert;
@@ -48,7 +47,7 @@ class Parser
         $exposedNameConflict = [];
 
         foreach ([...Attributes::findTargetMethods(Query::class), ...Attributes::findTargetMethods(QueryBis::class)] as $target) {
-            $rClass = new \ReflectionClass($target->class);
+            $rClass = new ReflectionClass($target->class);
             $method = new ReflectionMethod($target->class, $target->name);
             $return = $this->docParser->getReturnTypeFromDocBlock($method, $target->class);
 
@@ -84,6 +83,7 @@ class Parser
                 'class' => $target->class,
                 'name' => $target->name,
                 'phpFile' => $rClass->getFileName(),
+                'attr' => $attribute,
             ];
 
             $list[] = [
@@ -104,10 +104,10 @@ class Parser
 
             $conflictToString = [];
             foreach ($item as $value) {
-                $conflictToString[] = sprintf('"%s->%s" (%s)',  $value['class'], $value['name'], $value['phpFile']);
+                $conflictToString[] = sprintf('"%s->%s" (%s)', $value['class'], $value['name'], $value['phpFile']);
             }
 
-            $message .= '"' . $exposedName . '" found in ' . "\n- ".implode("\n- ", $conflictToString) . "\n";
+            $message .= '"' . $exposedName . '" found in ' . "\n- " . implode("\n- ", $conflictToString) . "\n";
         }
 
         if ($message !== null) {
@@ -125,7 +125,7 @@ class Parser
         foreach ([...Attributes::findTargetMethods(Right::class), ...Attributes::findTargetMethods(RightBis::class)] as $target) {
             $attribut = $target->attribute;
 
-            assert($attribut instanceof Right);
+            assert($attribut instanceof Right || $attribut instanceof RightBis);
             $list[$target->name] = ['class' => $target->class, 'right' => $attribut->getName()];
         }
 
@@ -161,7 +161,7 @@ class Parser
 
             foreach ($fieldList as $field) {
                 $method = new ReflectionMethod($target->name, $field->name);
-                $return = $this->docParser->getReturnTypeFromDocBlock($method, $target->name);
+                $return = $this->docParser->getReturnTypeFromDocBlock($method, $method->class);
 
                 $methodeList[lcfirst(str_replace('get', '', $field->name))] = [
                     'name' => $field->name,

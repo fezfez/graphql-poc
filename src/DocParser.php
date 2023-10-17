@@ -12,6 +12,7 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\ParserFactory;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ReturnTagValueNode;
+use PHPStan\PhpDocParser\Ast\Type\ArrayTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\GenericTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\OffsetAccessTypeNode;
 use PHPStan\PhpDocParser\Lexer\Lexer;
@@ -24,6 +25,7 @@ use ReflectionMethod;
 use RuntimeException;
 use Throwable;
 
+use function array_shift;
 use function class_exists;
 use function count;
 use function file_get_contents;
@@ -56,7 +58,11 @@ class DocParser
         if ($return->getName() === 'array') {
             $firstParamTag = $this->getReturnTags($comment);
 
-            return ['isList' => true, 'of' => $this->parseGeneric($firstParamTag, $class), 'ici' => 'a'];
+            try {
+                return ['isList' => true, 'of' => $this->parseGeneric($firstParamTag, $class), 'ici' => 'a'];
+            } catch (Throwable $exception) {
+                throw new RuntimeException(sprintf('error in %s::%s', $class, $method->getName()), 0, $exception);
+            }
         }
 
         try {
@@ -103,35 +109,51 @@ class DocParser
             return $this->resolveName($class, $type->offset->__toString());
         }
 
-        if (! ($type instanceof GenericTypeNode)) {
-            throw new Exception('not generic');
-        }
+        if ($type instanceof GenericTypeNode) {
+            $genericTypes = [];
+            foreach ($type->genericTypes as $index => $genericType) {
+                $variance = $type->variances[$index] ?? GenericTypeNode::VARIANCE_INVARIANT;
+                if ($variance !== GenericTypeNode::VARIANCE_INVARIANT) {
+                    throw new Exception('not invariant');
+                }
 
-        $genericTypes = [];
-        foreach ($type->genericTypes as $index => $genericType) {
-            $variance = $type->variances[$index] ?? GenericTypeNode::VARIANCE_INVARIANT;
-            if ($variance !== GenericTypeNode::VARIANCE_INVARIANT) {
-                throw new Exception('not invariant');
+                $genericTypes[] = (string) $genericType;
             }
 
-            $genericTypes[] = (string) $genericType;
+            if (count($genericTypes) !== 1) {
+                if ($genericTypes[0] === 'array-key') {
+                    array_shift($genericTypes);
+                }
+
+                if (count($genericTypes) !== 1) {
+                    throw new Exception('not one generic');
+                }
+            }
+
+            if ($genericTypes[0][0] === '\\') {
+                $genericTypes[0] = substr($genericTypes[0], 1);
+            }
+
+            $tmp = $genericTypes[0];
+
+            return match ($tmp) {
+                'int' => 'int',
+                'bool' => 'bool',
+                default => $this->resolveName($class, $tmp)
+            };
         }
 
-        if (count($genericTypes) !== 1) {
-            throw new Exception('not one generic');
+        if ($type instanceof ArrayTypeNode) {
+            return match ($type->type->__toString()) {
+                'int' => 'int',
+                'bool' => 'bool',
+                'string' => 'string',
+                'string[]' => 'string',
+                default => $this->resolveName($class, $type->type->__toString())
+            };
         }
 
-        if ($genericTypes[0][0] === '\\') {
-            $genericTypes[0] = substr($genericTypes[0], 1);
-        }
-
-        $tmp =  $genericTypes[0];
-
-        return match ($tmp) {
-            'int' => 'int',
-            'bool' => 'bool',
-            default => $this->resolveName($class, $tmp)
-        };
+        throw new RuntimeException('unable to parser');
     }
 
     private function resolveName(string $class, string $toResolve): string
@@ -157,7 +179,7 @@ class DocParser
         });
 
         if ($found === null || ! ($found instanceof Name\FullyQualified)) {
-            throw new RuntimeException(sprintf('no resolve "%s"', $toResolve));
+            return $class . '\\' . $toResolve;
         }
 
         return substr($found->toCodeString(), 1);
